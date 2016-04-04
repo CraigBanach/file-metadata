@@ -1,31 +1,21 @@
 'use strict';
 
 var express = require('express');
-var routes = require('./app/routes/index.js');
-var mongoose = require('mongoose');
-var passport = require('passport');
-var session = require('express-session');
+var multer = require("multer");
+var path = process.cwd();
+var storage = multer.memoryStorage()
+var upload = multer({ storage: storage })
 
 var app = express();
-require('dotenv').load();
-require('./app/config/passport')(passport);
 
-mongoose.connect(process.env.MONGO_URI);
+app.get("/", function(req, res) {
+	res.sendFile(path + "/index.html")
+	res.end();
+})
 
-app.use('/controllers', express.static(process.cwd() + '/app/controllers'));
-app.use('/public', express.static(process.cwd() + '/public'));
-app.use('/common', express.static(process.cwd() + '/app/common'));
-
-app.use(session({
-	secret: 'secretClementine',
-	resave: false,
-	saveUninitialized: true
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-routes(app, passport);
+app.post("/api/readFile", upload.single("file"), function(req,res){
+    res.json({"size": req.file.size + " bytes"})
+})
 
 var port = process.env.PORT || 8080;
 app.listen(port,  function () {
